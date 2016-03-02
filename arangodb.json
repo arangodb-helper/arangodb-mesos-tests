@@ -1,0 +1,54 @@
+{
+  "id": "arangodb",
+  "cpus": 1.0,
+  "mem": 256.0,
+  "ports": [0, 0],
+  "instances": 1,
+  "args": [
+    "framework",
+    "--framework_name=lumpen",
+    "--master=zk://{{ IP }}:2181/mesos",
+    "--zk=zk://{{ IP }}:2181/arangodb",
+    "--user=",
+    "--volume_path=/var/lib/arangodb",
+    "--principal=pri",
+    "--role=arangodb",
+    "--mode=cluster",
+    "--async_replication=true",
+    "--minimal_resources_agent=mem(*):128;cpus(*):0.25;disk(*):512",
+    "--minimal_resources_dbserver=mem(*):256;cpus(*):1.00;disk(*):2048",
+    "--minimal_resources_secondary=mem(*):256;cpus(*):1.00;disk(*):2048",
+    "--minimal_resources_coordinator=mem(*):256;cpus(*):1.00;disk(*):2048",
+    "--nr_agents=1",
+    "--nr_dbservers=2",
+    "--nr_coordinators=2",
+    "--failover_timeout=86400",
+    "--arangodb_image=m0ppers/arangodb-mesos:2.8.3",
+    "--secondaries_with_dbservers=false",
+    "--coordinators_with_dbservers=false"
+  ],
+  "env": {
+    "ARANGODB_WEBUI_HOST": "",
+    "ARANGODB_WEBUI_PORT": "0",
+    "MESOS_AUTHENTICATE": "",
+    "ARANGODB_SECRET": ""
+  },
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "m0ppers/arangodb-mesos-framework:mesosphere-V2",
+      "network": "HOST"
+    }
+  },
+  "healthChecks": [
+    {
+      "protocol": "HTTP",
+      "path": "/v1/health.json",
+      "gracePeriodSeconds": 3,
+      "intervalSeconds": 10,
+      "portIndex": 0,
+      "timeoutSeconds": 10,
+      "maxConsecutiveFailures": 0
+    }
+  ]
+}
