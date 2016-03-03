@@ -23,7 +23,7 @@
     "--nr_dbservers=2",
     "--nr_coordinators=2",
     "--failover_timeout=86400",
-    "--arangodb_image=m0ppers/arangodb-mesos:2.8.3",
+    "--arangodb_image=m0ppers/arangodb-mesos:3.0",
     "--secondaries_with_dbservers=false",
     "--coordinators_with_dbservers=false"
   ],
@@ -36,7 +36,7 @@
   "container": {
     "type": "DOCKER",
     "docker": {
-      "image": "m0ppers/arangodb-mesos-framework:mesosphere-V2",
+      "image": "m0ppers/arangodb-mesos-framework:3.0",
       "network": "HOST"
     }
   },
