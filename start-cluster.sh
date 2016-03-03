@@ -51,4 +51,4 @@ fi
 
 DOCKER_SOCKET=${DOCKER_SOCKET:-'/var/run/docker.sock'}
 
-docker -H unix://"$DOCKER_SOCKET" run --privileged -v "$DOCKER_SOCKET":"$DOCKER_SOCKET" -v "$WORKDIR":"$WORKDIR" $@ m0ppers/mesos-cluster $NUM_SLAVES $HOST_IP $PORT_RANGE $WORKDIR
+docker -H unix://"$DOCKER_SOCKET" run --privileged -v "$DOCKER_SOCKET":"$DOCKER_SOCKET" -v "$WORKDIR":"$WORKDIR" -v /sys/fs/cgroup:/sys/fs/cgroup $@ m0ppers/mesos-cluster $NUM_SLAVES $HOST_IP $PORT_RANGE $WORKDIR
