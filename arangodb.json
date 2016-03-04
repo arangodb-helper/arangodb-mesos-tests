@@ -6,7 +6,7 @@
   "instances": 1,
   "args": [
     "framework",
-    "--framework_name=lumpen",
+    "--framework_name=ara",
     "--master=zk://{{ IP }}:2181/mesos",
     "--zk=zk://{{ IP }}:2181/arangodb",
     "--user=",
@@ -16,14 +16,14 @@
     "--mode=cluster",
     "--async_replication=true",
     "--minimal_resources_agent=mem(*):128;cpus(*):0.25;disk(*):512",
-    "--minimal_resources_dbserver=mem(*):256;cpus(*):0.5;disk(*):2048",
-    "--minimal_resources_secondary=mem(*):256;cpus(*):0.5;disk(*):2048",
-    "--minimal_resources_coordinator=mem(*):256;cpus(*):0.5;disk(*):2048",
+    "--minimal_resources_dbserver=mem(*):256;cpus(*):0.25;disk(*):2048",
+    "--minimal_resources_secondary=mem(*):256;cpus(*):0.25;disk(*):2048",
+    "--minimal_resources_coordinator=mem(*):256;cpus(*):0.25;disk(*):2048",
     "--nr_agents=1",
     "--nr_dbservers=2",
     "--nr_coordinators=2",
     "--failover_timeout=86400",
-    "--arangodb_image=m0ppers/arangodb-mesos:3.0",
+    "--arangodb_image=arangodb/arangodb-mesos:3.0",
     "--secondaries_with_dbservers=false",
     "--coordinators_with_dbservers=false"
   ],
@@ -36,7 +36,7 @@
   "container": {
     "type": "DOCKER",
     "docker": {
-      "image": "m0ppers/arangodb-mesos-framework:3.0",
+      "image": "arangodb/arangodb-mesos-framework:3.0",
       "network": "HOST"
     }
   },
