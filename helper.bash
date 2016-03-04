@@ -9,11 +9,8 @@ deploy_arangodb() {
   done
   
   STATUS_CODE=""
-  echo "" > code
   while [[ (-z "$STATUS_CODE") || ("$STATUS_CODE" -lt 200) || ("$STATUS_CODE" -gt 399) ]]; do
     STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$MGMT_URL"/v1/health.json || true)
-    echo "$STATUS_CODE" >> code
-    echo "$MGMT_URL"/v1/health.json >> code
     sleep 1
   done
   
