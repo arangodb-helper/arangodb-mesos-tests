@@ -10,7 +10,6 @@
     "--master=zk://{{ IP }}:2181/mesos",
     "--zk=zk://{{ IP }}:2181/arangodb",
     "--user=",
-    "--volume_path=/var/lib/arangodb",
     "--principal=pri",
     "--role=arangodb",
     "--mode=cluster",
