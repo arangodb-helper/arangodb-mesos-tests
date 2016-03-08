@@ -25,3 +25,13 @@ teardown() {
 @test "I can deploy arangodb" {
   deploy_arangodb
 }
+
+@test "Killing a dbserver will automatically restart that task" {
+  deploy_arangodb
+  local container_id=$(taskname2containername ara-DBServer1)
+  docker rm -f $container_id
+  
+  while [ $(curl http://$CURRENT_IP:5050/master/state.json | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-DBServer1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
+    sleep 1
+  done
+}

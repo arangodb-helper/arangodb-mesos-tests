@@ -18,3 +18,11 @@ deploy_arangodb() {
   [[ (-n "$COORDINATOR") && ("$COORDINATOR" != "null") ]] || (echo "No coordinator present :S" && exit 1)
   [[ "$(curl $COORDINATOR/_api/collection | jq '.collections | length > 0')" = "true" ]] || (echo "No collections on coordinator. Cluster bootstrap must be broken" && exit 1)
 }
+
+taskname2containername() {
+  local slave_id=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].slave_id')
+  local framework_id=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].framework_id')
+  local task_id=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].id')
+  local slave_url=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg slave_id "$slave_id" -r '.slaves | map(select (.id == $slave_id)) | .[0].pid | split("@") | reverse | join("/")')
+  echo $(curl "$slave_url"/state | jq --arg task_id "$task_id" --arg framework_id "$framework_id" -r '"mesos-" + .id + "." + (.frameworks | map(select (.id == $framework_id)) | .[0].executors | map(select(.tasks[].id == $task_id)) | .[0].container)')
+}
