@@ -7,11 +7,21 @@ setup() {
   mkdir -p data
   docker rm -f -v mesos-test-cluster || true
   ./start-cluster.sh $(pwd)/data/mesos-cluster/ --num-slaves=6 -d --name mesos-test-cluster
+  let end=$(date +%s)+100
   while [ -z "$CURRENT_IP" ]; do
     CURRENT_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' mesos-test-cluster)
+    if [ "$end" -le "$(date +%s)" ];then
+      echo "Timeout getting docker ip"
+      exit 99
+    fi
   done
+  let end=$(date +%s)+100
   while [ "$(curl $CURRENT_IP:8080/ping)" != "pong" ]; do
     sleep 1
+    if [ "$end" -le "$(date +%s)" ];then
+      echo "Timeout getting proper ping"
+      exit 99
+    fi
   done
 }
 
@@ -31,8 +41,13 @@ teardown() {
   local container_id=$(taskname2containername ara-DBServer1)
   docker rm -f -v $container_id
   
+  let end=$(date +%s)+100
   while [ $(curl http://$CURRENT_IP:5050/master/state.json | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-DBServer1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
     sleep 1
+    if [ "$end" -le "$(date +%s)" ];then
+      echo "Timeout getting running state"
+      exit 99
+    fi
   done
 }
 
@@ -41,8 +56,13 @@ teardown() {
   local container_id=$(taskname2containername ara-Coordinator1)
   docker rm -f -v $container_id
   
+  let end=$(date +%s)+100
   while [ $(curl http://$CURRENT_IP:5050/master/state.json | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
     sleep 1
+    if [ "$end" -le "$(date +%s)" ];then
+      echo "Timeout getting running coordinator"
+      exit 99
+    fi
   done
 }
 
@@ -55,8 +75,13 @@ teardown() {
   local container_id=$(taskname2containername ara-Coordinator1)
   docker rm -f -v $container_id
   
+  let end=$(date +%s)+100
   while [ $(curl http://$CURRENT_IP:5050/master/state.json | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
     sleep 1
+    if [ "$end" -le "$(date +%s)" ];then
+      echo "Timeout getting running coordinator"
+      exit 99
+    fi
   done
   
   local endpoint=$(taskname2endpoint ara-Coordinator1)
@@ -70,8 +95,13 @@ teardown() {
   local container_id=$(taskname2containername ara-Secondary1)
   docker rm -f -v $container_id
   
+  let end=$(date +%s)+100
   while [ $(curl http://$CURRENT_IP:5050/master/state.json | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Secondary1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
     sleep 1
+    if [ "$end" -le "$(date +%s)" ];then
+      echo "Timeout getting running secondary"
+      exit 99
+    fi
   done
 }
 
