@@ -19,16 +19,25 @@ deploy_arangodb() {
   [[ "$(curl $COORDINATOR/_api/collection | jq '.collections | length > 0')" = "true" ]] || (echo "No collections on coordinator. Cluster bootstrap must be broken" && exit 1)
 }
 
-taskname2containername() {
+taskname2slaveurl() {
   local slave_id=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].slave_id')
+  curl http://$CURRENT_IP:5050/master/state.json | jq --arg slave_id "$slave_id" -r '.slaves | map(select (.id == $slave_id)) | .[0].pid | split("@") | reverse | join("/")'
+}
+
+taskname2containername() {
   local framework_id=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].framework_id')
   local task_id=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].id')
-  local slave_url=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg slave_id "$slave_id" -r '.slaves | map(select (.id == $slave_id)) | .[0].pid | split("@") | reverse | join("/")')
+  local slave_url=$(taskname2slaveurl $1)
   echo $(curl "$slave_url"/state | jq --arg task_id "$task_id" --arg framework_id "$framework_id" -r '"mesos-" + .id + "." + (.frameworks | map(select (.id == $framework_id)) | .[0].executors | map(select(.tasks[].id == $task_id)) | .[0].container)')
 }
 
 taskname2endpoint() {
   local slave_id=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].slave_id')
   local hostname=$(curl http://$CURRENT_IP:5050/master/state.json | jq -r --arg slave_id "$slave_id" '.slaves | map(select(.id ==$slave_id)) | .[0].hostname')
-  curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '"http://" + $hostname + (.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].discovery.ports.ports[0].number)'
+  curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" --arg hostname "$hostname" -r '"http://" + $hostname + ":" + ((.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].discovery.ports.ports[0].number) | tostring)'
+}
+
+taskname2slavename() {
+  local slave_url=$(taskname2slaveurl $1)
+  curl $slave_url/state | jq -r '.flags.work_dir | split("/") | last'
 }
