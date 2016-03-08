@@ -99,8 +99,6 @@ EOF
   curl -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF
 { "Du hast gewiss": "Zeit" }
 EOF
-  curl "$endpoint"/_api/document?collection=clustertest > wurstsalat 
-  
   local num_docs=$(curl "$endpoint"/_api/document?collection=clustertest | jq '.documents | length')
 
   local slavename=$(taskname2slavename ara-DBServer1)
