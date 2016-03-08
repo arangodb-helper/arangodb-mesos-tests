@@ -26,3 +26,9 @@ taskname2containername() {
   local slave_url=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg slave_id "$slave_id" -r '.slaves | map(select (.id == $slave_id)) | .[0].pid | split("@") | reverse | join("/")')
   echo $(curl "$slave_url"/state | jq --arg task_id "$task_id" --arg framework_id "$framework_id" -r '"mesos-" + .id + "." + (.frameworks | map(select (.id == $framework_id)) | .[0].executors | map(select(.tasks[].id == $task_id)) | .[0].container)')
 }
+
+taskname2endpoint() {
+  local slave_id=$(curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].slave_id')
+  local hostname=$(curl http://$CURRENT_IP:5050/master/state.json | jq -r --arg slave_id "$slave_id" '.slaves | map(select(.id ==$slave_id)) | .[0].hostname')
+  curl http://$CURRENT_IP:5050/master/state.json | jq --arg taskname "$1" -r '"http://" + $hostname + (.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == $taskname)) | .[0].discovery.ports.ports[0].number)'
+}
