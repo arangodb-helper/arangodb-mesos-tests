@@ -15,7 +15,7 @@ deploy_arangodb() {
   let end=$(date +%s)+300
   while [[ (-z "$STATUS_CODE") || ("$STATUS_CODE" -lt 200) || ("$STATUS_CODE" -gt 399) ]]; do
     STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$MGMT_URL"/v1/health.json || true)
-    if [ "$end" -gt "$(date +%s)" ];then
+    if [ "$end" -lt "$(date +%s)" ];then
       >&2 curl $CURRENT_IP:5050/master/state.json --dump -
       >&2 curl "$MGMT_URL"/v1/health.json --dump -
       false
