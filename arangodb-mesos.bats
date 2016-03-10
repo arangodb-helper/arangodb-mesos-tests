@@ -20,11 +20,12 @@ setup() {
 }
 
 teardown() {
+  local id=$(curl $CURRENT_IP:5050/master/state.json | jq .id)
   docker stop mesos-test-cluster
   docker logs mesos-test-cluster 1>&2
   docker rm -f -v mesos-test-cluster
-  # absolutely make sure the framework is gone...
-  docker ps | grep arangodb/arangodb-mesos-framework | cut -d " " -f 1 | xargs docker rm -f -v || true
+  # absolutely make sure any dangling containers are gone...
+  docker ps | grep $id | cut -d " " -f 1 | xargs docker rm -f -v || true
   docker run --rm -v $(pwd)/data:/data ubuntu rm -rf /data/ 2>&1 > /dev/null || true
   rm -rf data/mesos-cluster
 }
