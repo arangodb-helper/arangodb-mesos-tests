@@ -23,6 +23,8 @@ teardown() {
   docker stop mesos-test-cluster
   docker logs mesos-test-cluster 1>&2
   docker rm -f -v mesos-test-cluster
+  # absolutely make sure the framework is gone...
+  docker ps | grep arangodb/arangodb-mesos-framework | cut -d " " -f 1 | xargs docker rm -f -v || true
   docker run --rm -v $(pwd)/data:/data ubuntu rm -rf /data/ 2>&1 > /dev/null || true
   rm -rf data/mesos-cluster
 }
