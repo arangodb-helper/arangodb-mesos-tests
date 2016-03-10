@@ -20,7 +20,7 @@ setup() {
 }
 
 teardown() {
-  local id=$(curl $CURRENT_IP:5050/master/state.json | jq .id)
+  local id=$(curl $CURRENT_IP:5050/master/state.json | jq -r .id)
   docker stop mesos-test-cluster
   docker logs mesos-test-cluster 1>&2
   docker rm -f -v mesos-test-cluster
