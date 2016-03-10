@@ -12,7 +12,7 @@ deploy_arangodb() {
   done
   
   STATUS_CODE=""
-  let end=$(date +%s)+200
+  let end=$(date +%s)+300
   while [[ (-z "$STATUS_CODE") || ("$STATUS_CODE" -lt 200) || ("$STATUS_CODE" -gt 399) ]]; do
     STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$MGMT_URL"/v1/health.json || true)
     [ "$end" -gt "$(date +%s)" ]
