@@ -61,6 +61,8 @@ teardown() {
   
   local endpoint=$(taskname2endpoint ara-Coordinator1)
   local num_collections=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq length)
+
+  >&2 echo "Num collections: $num_collections"
   
   local container_id=$(taskname2containername ara-Coordinator1)
   docker rm -f -v $container_id
@@ -74,7 +76,8 @@ teardown() {
   local endpoint=$(taskname2endpoint ara-Coordinator1)
   local num_collections_new=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq length)
   
-  "$num_collections" = "$num_collections_new"
+  echo "Result: $num_collections $num_collections_new"
+  [ "$num_collections" = "$num_collections_new" ]
 }
 
 @test "Killing a secondary server will immediately restart that task" {
