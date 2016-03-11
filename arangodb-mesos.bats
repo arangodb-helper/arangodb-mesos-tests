@@ -60,7 +60,14 @@ teardown() {
   deploy_arangodb
   
   local endpoint=$(taskname2endpoint ara-Coordinator1)
-  local num_collections=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq length)
+  
+  let end=$(date +%s)+100
+  while [ ! $(curl -f -s $endpoint/_api/collections) ]; do
+    sleep 1
+    [ "$end" -gt "$(date +%s)" ]
+  done
+
+  local num_collections=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq '.collections | length')
 
   >&2 echo "Num collections: $num_collections"
   
@@ -74,9 +81,15 @@ teardown() {
   done
   
   local endpoint=$(taskname2endpoint ara-Coordinator1)
-  local num_collections_new=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq length)
   
-  echo "Result: $num_collections $num_collections_new"
+  let end=$(date +%s)+100
+  while [ ! $(curl -f -s $endpoint/_api/collections) ]; do
+    sleep 1
+    [ "$end" -gt "$(date +%s)" ]
+  done
+  local num_collections_new=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq '.collections | length')
+  
+  >&2 echo "Result: $num_collections $num_collections_new"
   [ "$num_collections" = "$num_collections_new" ]
 }
 
