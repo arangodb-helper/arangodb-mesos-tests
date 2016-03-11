@@ -74,7 +74,11 @@ teardown() {
   local endpoint=$(taskname2endpoint ara-Coordinator1)
   local num_collections_new=$(curl $endpoint/_api/collections | jq length)
   
-  [ "$num_collections" = "$num_collections_new" ]
+  if [ "$num_collections" = "$num_collections_new" ]; then
+    >&2 echo "Collections: $num_collections $num_collections_new"
+    >&2 curl $endpoint/_api/collections --dump -
+    false
+  fi
 }
 
 @test "Killing a secondary server will immediately restart that task" {
