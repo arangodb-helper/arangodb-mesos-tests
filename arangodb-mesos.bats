@@ -62,12 +62,12 @@ teardown() {
   local endpoint=$(taskname2endpoint ara-Coordinator1)
   
   let end=$(date +%s)+100
-  while [ ! $(curl -f -s $endpoint/_api/collections) ]; do
+  while [ ! $(curl -f -s $endpoint/_api/collection) ]; do
     sleep 1
     [ "$end" -gt "$(date +%s)" ]
   done
 
-  local num_collections=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq '.collections | length')
+  local num_collections=$(curl -v -s $endpoint/_api/collection | tee -a /dev/stderr | jq '.collections | length')
 
   >&2 echo "Num collections: $num_collections"
   
@@ -83,11 +83,11 @@ teardown() {
   local endpoint=$(taskname2endpoint ara-Coordinator1)
   
   let end=$(date +%s)+100
-  while [ ! $(curl -f -s $endpoint/_api/collections) ]; do
+  while [ ! $(curl -f -s $endpoint/_api/collection) ]; do
     sleep 1
     [ "$end" -gt "$(date +%s)" ]
   done
-  local num_collections_new=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq '.collections | length')
+  local num_collections_new=$(curl -v -s $endpoint/_api/collection | tee -a /dev/stderr | jq '.collections | length')
   
   >&2 echo "Result: $num_collections $num_collections_new"
   [ "$num_collections" = "$num_collections_new" ]
