@@ -13,14 +13,14 @@ setup() {
     [ "$end" -gt "$(date +%s)" ]
   done
   let end=$(date +%s)+100
-  while [ "$(curl -D /dev/stderr -s $CURRENT_IP:8080/ping | tee -a /dev/stderr)" != "pong" ]; do
+  while [ "$(curl -v -s $CURRENT_IP:8080/ping | tee -a /dev/stderr)" != "pong" ]; do
     sleep 1
     [ "$end" -gt "$(date +%s)" ]
   done
 }
 
 teardown() {
-  local id=$(curl -D /dev/stderr -s $CURRENT_IP:5050/master/state.json | jq -r .id)
+  local id=$(curl -v -s $CURRENT_IP:5050/master/state.json | jq -r .id)
   docker stop mesos-test-cluster
   docker logs mesos-test-cluster 1>&2
   docker rm -f -v mesos-test-cluster
@@ -39,7 +39,7 @@ teardown() {
   docker rm -f -v $container_id
   
   let end=$(date +%s)+100
-  while [ $(curl -D /dev/stderr -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-DBServer1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
+  while [ $(curl -v -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-DBServer1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
     [ "$end" -gt "$(date +%s)" ]
   done
 }
@@ -50,7 +50,7 @@ teardown() {
   docker rm -f -v $container_id
   
   let end=$(date +%s)+100
-  while [ $(curl -D /dev/stderr -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
+  while [ $(curl -v -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
     sleep 1
     [ "$end" -gt "$(date +%s)" ]
   done
@@ -60,19 +60,19 @@ teardown() {
   deploy_arangodb
   
   local endpoint=$(taskname2endpoint ara-Coordinator1)
-  local num_collections=$(curl -D /dev/stderr -s $endpoint/_api/collections | tee -a /dev/stderr | jq length)
+  local num_collections=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq length)
   
   local container_id=$(taskname2containername ara-Coordinator1)
   docker rm -f -v $container_id
   
   let end=$(date +%s)+100
-  while [ $(curl -D /dev/stderr -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
+  while [ $(curl -v -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
     sleep 1
     [ "$end" -gt "$(date +%s)" ]
   done
   
   local endpoint=$(taskname2endpoint ara-Coordinator1)
-  local num_collections_new=$(curl -D /dev/stderr -s $endpoint/_api/collections | tee -a /dev/stderr | jq length)
+  local num_collections_new=$(curl -v -s $endpoint/_api/collections | tee -a /dev/stderr | jq length)
   
   "$num_collections" = "$num_collections_new"
 }
@@ -83,7 +83,7 @@ teardown() {
   docker rm -f -v $container_id
   
   let end=$(date +%s)+100
-  while [ $(curl -D /dev/stderr -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Secondary1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
+  while [ $(curl -v -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Secondary1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
     sleep 1
     [ "$end" -gt "$(date +%s)" ]
   done
@@ -93,27 +93,27 @@ teardown() {
     deploy_arangodb
     
     local endpoint=$(taskname2endpoint ara-Coordinator1)
-    curl -D /dev/stderr -s -X POST --data-binary @- --dump - "$endpoint"/_api/collection <<EOF | tee -a /dev/stderr
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/collection <<EOF | tee -a /dev/stderr
   { 
     "name" : "clustertest", "numberOfShards": 2, "waitForSync": true
   }
 EOF
-    curl -D /dev/stderr -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
   { "cluster": "lieber cluster" }
 EOF
-    curl -D /dev/stderr -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
   { "es ist": "noch nicht so weit" }
 EOF
-    curl -D /dev/stderr -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
   { "wir sehen erst den": "cluster fail" }
 EOF
-    curl -D /dev/stderr -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
   { "Ehe jeder Container nach": "/dev/null muss" }
 EOF
-    curl -D /dev/stderr -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
   { "Du hast gewiss": "Zeit" }
 EOF
-    local num_docs=$(curl -D /dev/stderr -s "$endpoint"/_api/document?collection=clustertest | tee -a /dev/stderr | jq '.documents | length')
+    local num_docs=$(curl -v -s "$endpoint"/_api/document?collection=clustertest | tee -a /dev/stderr | jq '.documents | length')
 
     local slavename=$(taskname2slavename ara-DBServer1)
     local containername=$(taskname2containername ara-DBServer1)
@@ -121,7 +121,7 @@ EOF
     docker exec mesos-test-cluster supervisorctl stop $slavename
     docker rm -f -v $containername
     
-    local num_docs_new=$(curl -D /dev/stderr -s "$endpoint"/_api/document?collection=clustertest | tee -a /dev/stderr | jq '.documents | length')
+    local num_docs_new=$(curl -v -s "$endpoint"/_api/document?collection=clustertest | tee -a /dev/stderr | jq '.documents | length')
   >&2 echo "Docs: $num_docs $num_docs_new"
   [ "$num_docs" = "$num_docs_new" ]
 }
