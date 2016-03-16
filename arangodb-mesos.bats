@@ -31,6 +31,7 @@ teardown() {
 }
 
 @test "I can deploy arangodb" {
+  deploy_arangodb
 }
 
 @test "Killing a dbserver will automatically restart that task" {
@@ -75,11 +76,12 @@ teardown() {
   docker rm -f -v $container_id
   
   let end=$(date +%s)+100
-  while [ $(curl -v -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
+  while [ $(curl -v -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING" and .discovery.ports.ports[0].number)) | length') != 1 ]; do
     sleep 1
     [ "$end" -gt "$(date +%s)" ]
   done
   
+  >&2 echo "Result: $endpoint"
   local endpoint=$(taskname2endpoint ara-Coordinator1)
   
   let end=$(date +%s)+100
