@@ -117,7 +117,7 @@ teardown() {
   { 
     "name" : "clustertest", "numberOfShards": 2, "waitForSync": true
   }
-EOF
+EOF     
     curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
   { "cluster": "lieber cluster" }
 EOF
@@ -138,8 +138,13 @@ EOF
     local slavename=$(taskname2slavename ara-DBServer1)
     local containername=$(taskname2containername ara-DBServer1)
 
+    serverId=$(grep -r "bootstraped" 8629.log | sed "s/.*bootstraped DB server //g")
+    secondaryId=$(echo $serverId | sed -e 's/DBServer\([0-9]\+\)/Secondary\1/g')
+
     docker exec mesos-test-cluster supervisorctl stop $slavename
     docker rm -f -v $containername
+
+    curl -X PUT -v 127.0.0.1:8530/_admin/cluster/swapPrimaryAndSecondary --data "{\"primary\": \"$serverId\", \"secondary\": \"$secondaryId\"}"
     
     local num_docs_new=$(curl -v -s "$endpoint"/_api/document?collection=clustertest | tee -a /dev/stderr | jq '.documents | length')
   >&2 echo "Docs: $num_docs $num_docs_new"
