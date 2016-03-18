@@ -144,7 +144,7 @@ EOF
     docker exec mesos-test-cluster supervisorctl stop $slavename
     docker rm -f -v $containername
 
-    curl -X PUT -v 127.0.0.1:8530/_admin/cluster/swapPrimaryAndSecondary --data "{\"primary\": \"$serverId\", \"secondary\": \"$secondaryId\"}"
+    curl -X PUT -v "$endpoint"/_admin/cluster/swapPrimaryAndSecondary --data "{\"primary\": \"$serverId\", \"secondary\": \"$secondaryId\"}"
     
     local num_docs_new=$(curl -v -s "$endpoint"/_api/document?collection=clustertest | tee -a /dev/stderr | jq '.documents | length')
   >&2 echo "Docs: $num_docs $num_docs_new"
