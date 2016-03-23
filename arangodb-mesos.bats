@@ -87,7 +87,7 @@ teardown() {
   local endpoint=$(taskname2endpoint ara-Coordinator1)
   
   let end=$(date +%s)+100
-  while [ ! $(curl -f -s $endpoint/_api/collection) ]; do
+  while [ ! $(curl -v -f -s $endpoint/_api/collection) ]; do
     sleep 1
     [ "$end" -gt "$(date +%s)" ]
   done
