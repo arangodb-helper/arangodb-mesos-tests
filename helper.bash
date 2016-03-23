@@ -8,10 +8,12 @@ deploy_arangodb() {
   let end=$(date +%s)+300
   while [[ (-z "$STATUS_CODE") || ("$STATUS_CODE" -lt 200) || ("$STATUS_CODE" -gt 399) ]]; do
     # mesos tends to kill our framework from time to time so refetch MGMT URL every time
-    MGMT_URL=$(curl http://"$CURRENT_IP":8080/v2/apps//arangodb | jq -r 'if (.app.tasks |length > 0) then .app.tasks[0].host + ":" + (.app.tasks[0].ports[0] | tostring) else "" end')
+
+    MGMT_URL=$(curl -v http://"$CURRENT_IP":8080/v2/apps//arangodb | jq -r 'if (.app.tasks |length > 0) then .app.tasks[0].host + ":" + (.app.tasks[0].ports[0] | tostring) else "" end')
     if [ -n "$MGMT_URL" ]; then
-      STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$MGMT_URL"/v1/health.json || true)
+      STATUS_CODE=$(curl -v -s -o /dev/null -w "%{http_code}" "$MGMT_URL"/v1/health.json || true)
       if [ "$end" -lt "$(date +%s)" ];then
+        >&2 curl $CURRENT_IP:8080/v2/apps//arangodb --dump -
         >&2 curl $CURRENT_IP:5050/master/state.json --dump -
         docker ps | grep arangodb/arangodb-mesos-framework | cut -d " " -f 1 | xargs docker logs >&2
         >&2 curl "$MGMT_URL"/v1/health.json --dump -
