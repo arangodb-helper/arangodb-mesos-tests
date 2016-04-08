@@ -45,6 +45,7 @@ teardown() {
   done
 }
 
+
 @test "Killing a coordinator will automatically restart that task" {
   deploy_arangodb
   local container_id=$(taskname2containername ara-Coordinator1)
@@ -188,4 +189,54 @@ EOF
     >&2 echo "Code is $STATUS_CODE"
     [ "$STATUS_CODE" -eq "503" ]
 
+}
+
+@test "Rebooting a slave containing persistent data will restart its tasks with the old data" {
+  deploy_arangodb
+    local endpoint=$(taskname2endpoint ara-Coordinator1)
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/collection <<EOF | tee -a /dev/stderr
+  { 
+    "name" : "clustertest", "numberOfShards": 2, "waitForSync": true
+  }
+EOF
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+  { "cluster": "lieber cluster" }
+EOF
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+  { "es ist": "noch nicht so weit" }
+EOF
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+  { "wir sehen erst den": "cluster fail" }
+EOF
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+  { "Ehe jeder Container nach": "/dev/null muss" }
+EOF
+    curl -v -s -X POST --data-binary @- --dump - "$endpoint"/_api/document?collection=clustertest <<EOF | tee -a /dev/stderr
+  { "Du hast gewiss": "Zeit" }
+EOF
+    local num_docs=$(curl -v -s "$endpoint"/_api/document?collection=clustertest | tee -a /dev/stderr | jq '.documents | length')
+  local slavename=$(taskname2slavename ara-DBServer1)
+  local containername=$(taskname2containername ara-DBServer1)
+  
+  docker exec mesos-test-cluster supervisorctl stop $slavename
+  docker rm -f -v $containername
+
+  docker exec mesos-test-cluster supervisorctl start $slavename
+  sleep 2
+  # slave will be rejected by the master. must be started one more time and will get a new Slave id BUT everything should work anyway
+  docker exec mesos-test-cluster supervisorctl start $slavename
+
+  let end=$(date +%s)+100
+  while [ $(curl -v -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-DBServer1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
+    [ "$end" -gt "$(date +%s)" ]
+  done
+
+  let end=$(date +%s)+100
+  while [ $(curl -v -s http://$CURRENT_IP:5050/master/state.json | tee -a /dev/stderr | jq -r '.frameworks | map(select (.name == "ara")) | .[0].tasks | map(select (.name == "ara-Coordinator1" and .state == "TASK_RUNNING")) | length') != 1 ]; do
+    [ "$end" -gt "$(date +%s)" ]
+  done
+  local endpoint=$(taskname2endpoint ara-Coordinator1)
+  local num_docs=$(curl -v -s "$endpoint"/_api/document?collection=clustertest | tee -a /dev/stderr | jq '.documents | length')
+  >&2 echo "Docs: $num_docs $num_docs_new"
+  [ "$num_docs" = "$num_docs_new" ]
 }
