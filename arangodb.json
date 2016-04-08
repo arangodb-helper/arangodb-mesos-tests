@@ -14,7 +14,7 @@
     "--role=arangodb",
     "--mode=cluster",
     "--async_replication=true",
-    "--minimal_resources_agent=mem(*):128;cpus(*):0.25;disk(*):512",
+    "--minimal_resources_agent=mem(*):512;cpus(*):0.25;disk(*):512",
     "--minimal_resources_dbserver=mem(*):512;cpus(*):0.25;disk(*):1024",
     "--minimal_resources_secondary=mem(*):512;cpus(*):0.25;disk(*):1024",
     "--minimal_resources_coordinator=mem(*):512;cpus(*):0.25;disk(*):1024",
